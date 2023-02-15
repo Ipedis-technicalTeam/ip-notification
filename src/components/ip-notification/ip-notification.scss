@@ -1,0 +1,113 @@
+@use 'sass:math';
+@use 'sass:color';
+
+/*========== Convert Pixels to REM ==========*/
+
+@function rem($pixels, $base: 16) {
+  $rem: if(math.is-unitless($pixels), math.div($pixels, $base), math.div($pixels, ($base + 0px)));
+
+  @return $rem * 1rem;
+}
+
+/*========== Convert Pixels to EM ==========*/
+
+@function em($pixels, $base: 16) {
+  $em: if(math.is-unitless($pixels), math.div($pixels, $base), math.div($pixels, ($base + 0px)));
+
+  @return $em * 1em;
+}
+
+/*______________________________________________________________________
+  ----------------------------- Fade (Func.) ---------------------------
+  ______________________________________________________________________ */
+
+@function colorFade($color, $percentage) {
+  $num: if(math.is-unitless($percentage), math.div($percentage, 100), math.div($percentage, 100%));
+
+  @return color.change($color, $alpha: $num);
+}
+
+:host {
+  --success: #057264;
+  --info: #2249b0;
+  --warning: #f08d34;
+  --error: #dc0909;
+
+  --ip-primary-color: var(--success);
+  --ip-secondary-color: #585858;
+
+  position: absolute;
+  // inset-inline: 0;
+  // inset-block-start: 0;
+  margin-inline: auto;
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto 1fr;
+  column-gap: em(15);
+  grid-template-areas:
+    '. . close'
+    'icon desc .';
+
+  inline-size: min(rem(365), 100%);
+  background-color: #ffffff;
+  color: var(--ip-secondary-color);
+  box-shadow: 0 0 em(10) em(5) colorFade(#f0f0f2, 70);
+
+  padding-block: em(30);
+  padding-inline: em(25);
+  border-radius: em(2);
+  box-sizing: border-box;
+}
+
+#timer {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  inline-size: 100%;
+  border-radius: em(2);
+  block-size: rem(5);
+  background-color: var(--ip-primary-color);
+  opacity: 0.3;
+  transition: inline-size 300ms ease-in-out;
+}
+
+.icon {
+  grid-area: icon;
+  display: block;
+  inline-size: rem(30);
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  background-color: var(--ip-primary-color);
+}
+
+p {
+  padding: 0;
+  margin: 0;
+}
+
+.desc {
+  grid-area: desc;
+
+  .title {
+    font-size: rem(16);
+    font-weight: 500;
+    line-height: em(20);
+    margin-block-end: em(10);
+    color: var(--ip-primary-color);
+  }
+
+  .text {
+    font-size: rem(14);
+    line-height: em(21, 14);
+    color: currentColor;
+  }
+}
+
+#close {
+  all: unset;
+  display: block;
+  grid-area: close;
+  color: currentColor;
+  cursor: pointer;
+}
