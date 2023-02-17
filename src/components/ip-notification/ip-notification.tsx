@@ -1,4 +1,4 @@
-import { Component, Host, h, Element, getAssetPath, Prop } from '@stencil/core';
+import { Component, Host, h, Element, getAssetPath, Prop, State, Watch } from '@stencil/core';
 
 @Component({
   tag: 'ip-notification',
@@ -9,75 +9,106 @@ import { Component, Host, h, Element, getAssetPath, Prop } from '@stencil/core';
 export class IpNotification {
   @Element() el: HTMLElement;
 
-  @Prop() state: string;
+  /** The alert message  */
+  @Prop() message: string = 'Your success message';
+
+  /** The alert description */
+  @Prop() description: string = 'Describe the event and give further instructions if needed';
+
+  /** The alert state (Options: "success", "info", "warning", "error") */
+  @Prop() state: string = 'success';
+
+  /** The icon to display - optional */
   @Prop() iconSrc: string;
+
+  /** The direction the alert will display (Options: "left", "right") - optional */
   @Prop() popDirection: string;
+
+  /** The duration of the alert (Options: in seconds) - optional */
   @Prop() duration: string;
+
+  /** The id to trigger the alert (Options: a button or link should have the attribute "data-trigger" with the trigger-id) - optional */
+  @Prop() triggerId: string;
+
+  @State() isActive: boolean = false;
+
+  @Watch('isActive')
+  watchStateHandler(newValue: boolean) {
+    this.isActive = newValue;
+  }
+
+  connectedCallback() {
+    const triggerBtn = this.triggerId ? document.querySelector(`[data-trigger="${this.triggerId}"]`) : document.querySelector('[data-trigger]');
+
+    triggerBtn.addEventListener('click', () => {
+      this.isActive = true;
+    });
+  }
+
+  componentWillLoad() {
+    this.hideAlert();
+    this.setState();
+  }
 
   componentDidLoad() {
     const closeBtn = this.el.shadowRoot.getElementById('close');
-    const timer = this.el.shadowRoot.getElementById('timer');
-
-    const delay = parseInt(this.duration) * 1000;
-
-    this.setAnimation('normal');
-
-    timer.animate({ inlineSize: ['100%', '0'] }, { delay: 1000, duration: delay, fill: 'forwards' });
 
     closeBtn.addEventListener('click', () => {
       this.setAnimation('alternate-reverse');
 
       setTimeout(() => {
-        this.el.style.display = 'none';
+        this.hideAlert();
+        this.isActive = false;
       }, 1000);
     });
-
-    setTimeout(() => {
-      this.setAnimation('alternate-reverse');
-    }, delay + 1200);
-
-    this.setState();
   }
 
-  setAnimation(play) {
-    switch (this.popDirection) {
-      case 'top':
-        this.el.animate({ insetBlockStart: ['-100vh', '2vh'] }, { duration: 1000, direction: play, fill: 'forwards' });
-        this.el.style.insetInline = '0';
-        this.el.style.marginInline = 'auto';
-        break;
+  componentDidUpdate() {
+    const timer = this.el.shadowRoot.getElementById('timer');
+    const duration = parseFloat(this.duration) * 1000;
 
-      case 'left':
-        this.el.animate({ insetInlineStart: ['-100vw', '2vw'] }, { duration: 1000, direction: play, fill: 'forwards' });
-        break;
+    if (this.isActive) {
+      this.showAlert();
 
-      case 'right':
-        this.el.animate({ insetInlineEnd: ['-100vw', '2vw'] }, { duration: 1000, direction: play, fill: 'forwards' });
-        break;
+      this.setAnimation('normal');
 
-      default:
-        this.el.animate({ insetBlockStart: ['-100vh', '2vh'] }, { duration: 1000, direction: play, fill: 'forwards' });
-        break;
+      if (this.duration) {
+        timer.animate({ inlineSize: ['100%', '0'] }, { delay: 1000, duration, fill: 'forwards' });
+
+        setTimeout(() => {
+          this.setAnimation('alternate-reverse');
+        }, duration + 1200);
+
+        setTimeout(() => {
+          this.hideAlert();
+          this.isActive = false;
+        }, duration + 1200 + 100);
+      }
     }
   }
 
-  setCloseAnimation() {
+  hideAlert() {
+    this.el.style.display = 'none';
+    this.el.setAttribute('tabindex', '-1');
+  }
+
+  showAlert() {
+    this.el.style.display = 'grid';
+    this.el.setAttribute('tabindex', '0');
+  }
+
+  setAnimation(direction) {
     switch (this.popDirection) {
-      case 'top':
-        this.el.animate({ insetBlockStart: ['-100vh', '2vh'] }, { duration: 1000, fill: 'forwards' });
-
-        break;
-
       case 'left':
-        this.el.animate({ insetInlineStart: ['-100vw', '2vw'] }, { duration: 1000, fill: 'forwards' });
+        this.el.animate({ insetInlineStart: ['-100vmax', '2vmax'] }, { duration: 1000, direction, fill: 'forwards' });
         break;
 
       case 'right':
-        this.el.animate({ insetInlineEnd: ['-100vw', '2vw'] }, { duration: 1000, fill: 'forwards' });
+        this.el.animate({ insetInlineEnd: ['-100vmax', '2vmax'] }, { duration: 1000, direction, fill: 'forwards' });
         break;
 
       default:
-        this.el.animate({ insetBlockStart: ['-100vh', '2vh'] }, { duration: 1000, fill: 'forwards' });
+        this.el.animate({ insetInlineEnd: ['-100vmax', '2vmax'] }, { duration: 1000, direction, fill: 'forwards' });
         break;
     }
   }
@@ -85,22 +116,23 @@ export class IpNotification {
   setState() {
     switch (this.state) {
       case 'success':
-        this.el.style.setProperty('--ip-primary-color', 'var(--success)');
+        this.el.style.setProperty('--ip-notification-primary-color', 'var(--notification-success)');
         break;
 
       case 'info':
-        this.el.style.setProperty('--ip-primary-color', 'var(--info)');
+        this.el.style.setProperty('--ip-notification-primary-color', 'var(--notification-info)');
         break;
 
       case 'warning':
-        this.el.style.setProperty('--ip-primary-color', 'var(--warning)');
+        this.el.style.setProperty('--ip-notification-primary-color', 'var(--notification-warning)');
         break;
 
       case 'error':
-        this.el.style.setProperty('--ip-primary-color', 'var(--error)');
+        this.el.style.setProperty('--ip-notification-primary-color', 'var(--notification-error)');
         break;
 
       default:
+        this.el.style.setProperty('--ip-notification-primary-color', 'var(--notification-success)');
         break;
     }
   }
@@ -110,16 +142,17 @@ export class IpNotification {
       <Host>
         <span aria-hidden="true" id="timer"></span>
 
-        <img
-          src={this.iconSrc ? this.iconSrc : this.state ? getAssetPath(`assets/${this.state}.png`) : getAssetPath('assets/success.png')}
-          alt=""
-          class="icon"
-          aria-hidden="true"
-        />
+        <img src={this.iconSrc ? this.iconSrc : getAssetPath(`assets/${this.state}.png`)} alt="" class="icon" aria-hidden="true" />
 
-        <div class="desc">
-          <p class="title">Your success message</p>
-          <p class="text">Describe the event and give further instructions if needed</p>
+        <div class="message">
+          <p part="title" class="title">
+            {/* The title of the alert message */}
+            {this.message}
+          </p>
+          <p part="desc" class="desc">
+            {/* The description of the alert message */}
+            {this.description}
+          </p>
         </div>
 
         <button id="close">
