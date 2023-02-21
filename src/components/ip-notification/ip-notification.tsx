@@ -59,7 +59,7 @@ export class IpNotification {
       setTimeout(() => {
         this.hideAlert();
         this.isActive = false;
-      }, 1000);
+      }, 100);
     });
   }
 

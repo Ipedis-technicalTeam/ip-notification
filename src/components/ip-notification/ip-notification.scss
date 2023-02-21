@@ -17,6 +17,14 @@
   @return $em * 1em;
 }
 
+/*========== Convert Pixels to VMIN ==========*/
+
+@function vmin($pixels, $screenSize: 1080) {
+  $vmin: (math.div($pixels, $screenSize)) * 100;
+
+  @return $vmin * 1vmin;
+}
+
 /*______________________________________________________________________
   ----------------------------- Fade (Func.) ---------------------------
   ______________________________________________________________________ */
@@ -40,7 +48,7 @@
 
   position: absolute;
   inset-inline: auto;
-  inset-block-end: 2vmin;
+  inset-block-end: vmin(20, 1002);
 
   display: grid;
   grid-template-columns: auto 1fr auto;
